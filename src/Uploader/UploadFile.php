@@ -13,10 +13,9 @@ use Stevenyangecho\UEditor\Uploader\Upload;
  */
 class UploadFile  extends Upload{
     use UploadQiniu;
-    public function doUpload()
-    {
-
-
+	use UploadAliyunOSS;
+	
+    public function doUpload(){
         $file = $this->request->file($this->fileField);
         if (empty($file)) {
             $this->stateInfo = $this->getStateInfo("ERROR_FILE_NOT_FOUND");
@@ -25,23 +24,13 @@ class UploadFile  extends Upload{
         if (!$file->isValid()) {
             $this->stateInfo = $this->getStateInfo($file->getError());
             return false;
-
         }
 
         $this->file = $file;
-
         $this->oriName = $this->file->getClientOriginalName();
-
         $this->fileSize = $this->file->getSize();
         $this->fileType = $this->getFileExt();
-
         $this->fullName = $this->getFullName();
-
-
-        $this->filePath = $this->getFilePath();
-
-        $this->fileName = basename($this->filePath);
-
 
         //检查文件大小是否超出限制
         if (!$this->checkSize()) {
@@ -56,29 +45,25 @@ class UploadFile  extends Upload{
 
         if(config('UEditorUpload.core.mode')=='local'){
             try {
+				$this->filePath = $this->getFilePath();
+				$this->fileName = basename($this->filePath);
                 $this->file->move(dirname($this->filePath), $this->fileName);
-
                 $this->stateInfo = $this->stateMap[0];
-
-            } catch (FileException $exception) {
+            }catch(FileException $exception) {
                 $this->stateInfo = $this->getStateInfo("ERROR_WRITE_CONTENT");
                 return false;
             }
-
-        }else if(config('UEditorUpload.core.mode')=='qiniu'){
-
+        }else if(config('UEditorUpload.core.mode') == 'qiniu'){
+			$this->filePath = $this->getFilePath();
             $content=file_get_contents($this->file->getPathname());
             return $this->uploadQiniu($this->filePath,$content);
-
+        }else if(config('UEditorUpload.core.mode') == 'aliyunoss'){
+            return $this->uploadAliyunOSS();
         }else{
             $this->stateInfo = $this->getStateInfo("ERROR_UNKNOWN_MODE");
             return false;
         }
-
-
-
-
+		
         return true;
-
     }
 }
