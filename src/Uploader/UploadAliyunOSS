@@ -1,6 +1,8 @@
 <?php namespace Stevenyangecho\UEditor\Uploader;
 
 use JohnLui\AliyunOSS\AliyunOSS;
+use Auth;
+use Config;
 
 /**
  *
@@ -11,39 +13,44 @@ use JohnLui\AliyunOSS\AliyunOSS;
  *
  * @package Stevenyangecho\UEditor\Uploader
  */
-trait UploadAliyunOSS
-{
-    /**
-     * 获取文件路径
-     * @return string
-     */
-    protected function getFilePath()
-    {
-        $fullName = $this->fullName;
+trait UploadAliyunOSS{
+	
+    public function uploadAliyunOSS(){
+        // $upManager = new UploadManager();
+        // $auth = new Auth(config('UEditorUpload.core.qiniu.accessKey'), config('UEditorUpload.core.qiniu.secretKey'));
+        // $token = $auth->uploadToken(config('UEditorUpload.core.qiniu.bucket'));
 
-
-        $fullName = ltrim($fullName, '/');
-
-
-        return $fullName;
-    }
-
-    public function uploadAliyunOSS($key, $content)
-    {
-        $upManager = new UploadManager();
-        $auth = new Auth(config('UEditorUpload.core.qiniu.accessKey'), config('UEditorUpload.core.qiniu.secretKey'));
-        $token = $auth->uploadToken(config('UEditorUpload.core.qiniu.bucket'));
-
-        list($ret, $error) = $upManager->put($token, $key, $content);
-        if ($error) {
-            $this->stateInfo= $error->message();
-        } else {
-            //change $this->fullName ,return the url
-            $url=rtrim(strtolower(config('UEditorUpload.core.qiniu.url')),'/');
-            $fullName = ltrim($this->fullName, '/');
-            $this->fullName=$url.'/'.$fullName;
-            $this->stateInfo = $this->stateMap[0];
-        }
+        // list($ret, $error) = $upManager->put($token, $key, $content);
+        // if ($error) {
+            // $this->stateInfo= $error->message();
+        // } else {
+            // change $this->fullName ,return the url
+            // $url=rtrim(strtolower(config('UEditorUpload.core.qiniu.url')),'/');
+            // $fullName = ltrim($this->fullName, '/');
+            // $this->fullName=$url.'/'.$fullName;
+            // $this->stateInfo = $this->stateMap[0];
+        // }
+    	$ossClient = AliyunOSS::boot(Config::get('UEditorUpload.core.aliyunoss.ServerInternal'), Config::get('UEditorUpload.core.aliyunoss.AccessKeyId'), Config::get('UEditorUpload.core.aliyunoss.AccessKeySecret'));
+    	$ossClient->setBucket(Config::get('UEditorUpload.core.aliyunoss.Bucket'));
+		
+		if(isset(Auth::user()->uid)){
+			$this->fullName = Config::get('UEditorUpload.core.aliyunoss.Path') . "/" . Auth::user()->uid . "/" . date("YmdHis") . str_random(3) . '.' . $this->file->getClientOriginalExtension();
+		}else{
+			$this->fullName = Config::get('UEditorUpload.core.aliyunoss.Path') . "/" . date("YmdHis") . str_random(3) . '.' . $this->file->getClientOriginalExtension();
+		}
+    	
+    	try{
+    		$ossClient->uploadFile($this->fullName, $this->file->getPathName());
+			$this->stateInfo = $this->stateMap[0];
+    	}catch(\Exception $e){
+    		//设置错误消息为未知错误
+    		$this->stateInfo = $this->stateMap[14];
+    		return false;
+    	}
+		
+    	$this->fullName = Config::get('UEditorUpload.core.aliyunoss.imgPrefix') . '/' . $this->fullName . Config::get('UEditorUpload.core.aliyunoss.imgTailor');
+		
         return true;
     }
+	
 }
