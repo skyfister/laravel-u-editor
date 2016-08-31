@@ -21,16 +21,26 @@ return [
            // 'middleware' => 'auth',
         ],
 
-        'mode'=>'local',//上传方式,local 为本地   qiniu 为七牛
+        'mode' => 'local', //上传方式, local为本地, qiniu为七牛, aliyunoss为阿里云
 
-        //七牛配置,若mode='qiniu',以下为必填.
-        'qiniu'=>[
-            'accessKey'=>'',
-            'secretKey'=>'',
-            'bucket'=>'',
-            'url'=>'http://xxx.clouddn.com',//七牛分配的CDN域名,注意带上http://
-
-        ]
+        //七牛配置, 若mode='qiniu', 以下为必填.
+        'qiniu' => [
+            'accessKey' => '',
+            'secretKey' => '',
+            'bucket' => '',
+            'url' => 'http://xxx.clouddn.com', //七牛分配的CDN域名,注意带上http://
+        ],
+		
+        //阿里云OSS配置, 若mode='aliyunoss', 以下为必填.
+		'aliyunoss' => [
+			'AccessKeyId' => '',
+			'AccessKeySecret' => '',
+			'ServerInternal' => 'http://oss-cn-hangzhou-internal.aliyuncs.com',
+			'Bucket' => 'xxx',
+			'Path' => 'field',
+			'imgPrefix' => 'http://cdnimg.xxx.com',
+			'imgTailor' => '@1e_1c_0o_0l_240h_460w_90q.src',
+		]
     ],
     /**
      * 和原 UEditor /php/config.json 配置完全相同
@@ -126,6 +136,6 @@ return [
             ".ogg", ".ogv", ".mov", ".wmv", ".mp4", ".webm", ".mp3", ".wav", ".mid",
             ".rar", ".zip", ".tar", ".gz", ".7z", ".bz2", ".cab", ".iso",
             ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".pdf", ".txt", ".md", ".xml"
-        ]] /* 列出的文件类型 */
-
+        ]
+	] /* 列出的文件类型 */
 ];
